@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Sentiment Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #0a0e1a;
+  --deep:   #0e1426;
+  --card:   #121a2e;
+  --rim:    #1c2840;
+  --mist:   #243354;
+  --frost:  #c8deff;
+  --snow:   #eef4ff;
+  --teal:   #00e8c8;
+  --violet: #7c5cfc;
+  --rose:   #ff4d6d;
+  --amber:  #ffc947;
+  --emerald:#00d68f;
+  --dim:    #4a5f80;
+  --mid:    #7b94bb;
+  --glow-t: rgba(0,232,200,0.15);
+  --glow-v: rgba(124,92,252,0.15);
+  --glow-r: rgba(255,77,109,0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--frost);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── AMBIENT BACKGROUND ─────────────────────────────────────── */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+.orb {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.12;
+  animation: drift 18s ease-in-out infinite;
+}
+.orb-1 { width:600px;height:600px; top:-200px;left:-100px; background:var(--violet); animation-delay:0s; }
+.orb-2 { width:500px;height:500px; bottom:-150px;right:-100px; background:var(--teal); animation-delay:-9s; }
+.orb-3 { width:400px;height:400px; top:40%;left:40%; background:var(--rose); opacity:0.07; animation-delay:-5s; }
+
+@keyframes drift {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(30px,-20px) scale(1.05); }
+  66%      { transform: translate(-20px,30px) scale(0.97); }
+}
+
+/* ── GRID OVERLAY ──────────────────────────────────────────── */
+.grid-overlay {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(124,92,252,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,92,252,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── LAYOUT ────────────────────────────────────────────────── */
+.page { position: relative; z-index: 1; max-width: 1060px; margin: 0 auto; padding: 0 24px 100px; }
+
+/* ── NAV ───────────────────────────────────────────────────── */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24px 0; border-bottom: 1px solid rgba(124,92,252,0.12);
+}
+.nav-logo {
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px;
+  letter-spacing: 0.05em; color: var(--snow);
+}
+.nav-logo span { color: var(--teal); }
+.nav-status {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Inconsolata', monospace; font-size: 12px;
+  color: var(--dim); letter-spacing: 0.08em;
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--emerald); box-shadow: 0 0 8px var(--emerald);
+  animation: blink 2s ease-in-out infinite;
+}
+.status-dot.offline { background: var(--rose); box-shadow: 0 0 8px var(--rose); animation: none; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ── HERO ──────────────────────────────────────────────────── */
+.hero { padding: 64px 0 48px; text-align: center; }
+.hero-eyebrow {
+  font-family: 'Inconsolata', monospace; font-size: 11px;
+  color: var(--teal); letter-spacing: 0.25em; text-transform: uppercase;
+  margin-bottom: 20px; display: block;
+}
+.hero-title {
+  font-size: clamp(38px, 6vw, 72px); font-weight: 800; line-height: 1.0;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--snow) 30%, var(--teal) 65%, var(--violet) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-sub {
+  margin-top: 16px; font-size: 16px; color: var(--mid); font-weight: 400;
+  max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.6;
+}
+.hero-chips {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  margin-top: 24px;
+}
+.chip {
+  font-family: 'Inconsolata', monospace; font-size: 11px;
+  padding: 4px 14px; border-radius: 20px;
+  border: 1px solid; letter-spacing: 0.1em;
+}
+.chip-t { color: var(--teal);   border-color: rgba(0,232,200,0.3);   background: rgba(0,232,200,0.06); }
+.chip-v { color: var(--violet); border-color: rgba(124,92,252,0.3);  background: rgba(124,92,252,0.06); }
+.chip-e { color: var(--emerald);border-color: rgba(0,214,143,0.3);   background: rgba(0,214,143,0.06); }
+
+/* ── MAIN INPUT CARD ───────────────────────────────────────── */
+.input-card {
+  background: var(--card);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.input-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--violet), var(--teal), transparent);
+  opacity: 0.6;
+}
+.input-card.focused { border-color: rgba(124,92,252,0.4); }
+
+.input-label {
+  font-family: 'Inconsolata', monospace; font-size: 11px;
+  color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase;
+  margin-bottom: 12px; display: block;
+}
+
+textarea {
+  width: 100%; background: var(--deep);
+  border: 1px solid var(--rim); border-radius: 10px;
+  padding: 18px 20px;
+  font-family: 'DM Mono', monospace; font-size: 14px;
+  color: var(--snow); line-height: 1.7;
+  resize: vertical; min-height: 140px;
+  outline: none; transition: border-color 0.25s, box-shadow 0.25s;
+  caret-color: var(--teal);
+}
+textarea::placeholder { color: var(--dim); font-style: italic; }
+textarea:focus {
+  border-color: rgba(124,92,252,0.5);
+  box-shadow: 0 0 0 3px rgba(124,92,252,0.1), inset 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.input-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 16px; flex-wrap: wrap; gap: 12px;
+}
+.char-counter {
+  font-family: 'Inconsolata', monospace; font-size: 12px;
+  color: var(--dim);
+}
+.char-counter.warn { color: var(--amber); }
+.char-counter.over { color: var(--rose); }
+
+/* ── EXAMPLE CHIPS ─────────────────────────────────────────── */
+.examples {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;
+}
+.example-chip {
+  font-family: 'Inconsolata', monospace; font-size: 11px;
+  padding: 4px 12px; background: var(--deep); border: 1px solid var(--rim);
+  border-radius: 6px; color: var(--mid); cursor: pointer;
+  transition: all 0.2s; letter-spacing: 0.03em;
+}
+.example-chip:hover { border-color: var(--teal); color: var(--teal); }
+
+/* ── BUTTONS ───────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 12px; }
+
+.btn-analyze {
+  flex: 1; max-width: 260px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px 28px; border-radius: 10px;
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+  border: none; outline: none; transition: all 0.2s;
+  background: linear-gradient(135deg, var(--violet), #5b3fd4);
+  color: white; box-shadow: 0 4px 20px rgba(124,92,252,0.3);
+}
+.btn-analyze:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(124,92,252,0.45);
+}
+.btn-analyze:active:not(:disabled) { transform: translateY(0); }
+.btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-batch {
+  padding: 14px 22px; border-radius: 10px; cursor: pointer;
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  background: transparent; border: 1px solid var(--mist);
+  color: var(--mid); transition: all 0.2s;
+}
+.btn-batch:hover { border-color: var(--teal); color: var(--teal); }
+
+.btn-clear {
+  padding: 14px 18px; border-radius: 10px; cursor: pointer;
+  font-family: 'Inconsolata', monospace; font-size: 13px;
+  background: transparent; border: 1px solid var(--rim);
+  color: var(--dim); transition: all 0.2s;
+}
+.btn-clear:hover { border-color: var(--rose); color: var(--rose); }
+
+/* ── LOADING SPINNER ───────────────────────────────────────── */
+.spinner {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: white;
+  animation: spin 0.6s linear infinite;
+  display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESULT SECTION ────────────────────────────────────────── */
+#result-section {
+  margin-top: 28px;
+  opacity: 0; transform: translateY(12px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+}
+#result-section.show {
+  opacity: 1; transform: translateY(0);
+  pointer-events: auto;
+}
+
+.result-card {
+  background: var(--card); border: 1px solid var(--rim);
+  border-radius: 16px; padding: 28px; position: relative; overflow: hidden;
+}
+.result-card.pos { border-color: rgba(0,214,143,0.3); }
+.result-card.neg { border-color: rgba(255,77,109,0.3); }
+.result-card.neu { border-color: rgba(124,92,252,0.3); }
+
+/* big verdict */
+.verdict-row {
+  display: flex; align-items: center; gap: 20px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--rim);
+  margin-bottom: 24px;
+}
+.verdict-icon {
+  width: 64px; height: 64px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; flex-shrink: 0;
+}
+.verdict-icon.pos { background: rgba(0,214,143,0.12); border: 1px solid rgba(0,214,143,0.25); }
+.verdict-icon.neg { background: rgba(255,77,109,0.12); border: 1px solid rgba(255,77,109,0.25); }
+.verdict-icon.neu { background: rgba(124,92,252,0.12); border: 1px solid rgba(124,92,252,0.25); }
+
+.verdict-label {
+  font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
+  letter-spacing: 0.05em;
+}
+.verdict-label.pos { color: var(--emerald); }
+.verdict-label.neg { color: var(--rose); }
+.verdict-label.neu { color: var(--violet); }
+.verdict-conf {
+  font-family: 'Inconsolata', monospace; font-size: 13px;
+  color: var(--mid); margin-top: 4px;
+}
+
+/* score bars */
+.scores-title {
+  font-family: 'Inconsolata', monospace; font-size: 11px;
+  color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.score-row { margin-bottom: 12px; }
+.score-header {
+  display: flex; justify-content: space-between;
+  font-family: 'Inconsolata', monospace; font-size: 12px;
+  margin-bottom: 6px;
+}
+.score-name { color: var(--mid); }
+.score-pct  { color: var(--frost); font-weight: 600; }
+.bar-track {
+  height: 6px; background: var(--deep); border-radius: 3px; overflow: hidden;
+}
+.bar-fill {
+  height: 100%; border-radius: 3px; width: 0;
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bar-fill.pos { background: linear-gradient(90deg, #00a87a, var(--emerald)); }
+.bar-fill.neg { background: linear-gradient(90deg, #cc3356, var(--rose)); }
+.bar-fill.neu { background: linear-gradient(90deg, #5b3fd4, var(--violet)); }
+
+/* metadata strip */
+.meta-strip {
+  display: flex; gap: 20px; flex-wrap: wrap;
+  margin-top: 20px; padding-top: 16px;
+  border-top: 1px solid var(--rim);
+}
+.meta-item {
+  font-family: 'Inconsolata', monospace; font-size: 11px;
+  color: var(--dim);
+}
+.meta-item strong { color: var(--mid); }
+
+/* ── HISTORY SECTION ───────────────────────────────────────── */
+.history-section {
+  margin-top: 48px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.4s;
+}
+.history-section.show { opacity: 1; pointer-events: auto; }
+
+.section-header {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+}
+.section-title {
+  font-size: 13px; font-weight: 700; color: var(--frost);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.section-line { flex: 1; height: 1px; background: var(--rim); }
+.clear-history-btn {
+  font-family: 'Inconsolata', monospace; font-size: 11px;
+  color: var(--dim); background: none; border: none; cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: color 0.2s;
+}
+.clear-history-btn:hover { color: var(--rose); }
+
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+.history-item {
+  background: var(--card); border: 1px solid var(--rim);
+  border-radius: 10px; padding: 14px 18px;
+  display: grid; grid-template-columns: 1fr auto auto;
+  align-items: center; gap: 16px;
+  cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.history-item:hover { border-color: var(--mist); background: var(--deep); }
+.history-text {
+  font-family: 'DM Mono', monospace; font-size: 13px;
+  color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.history-label {
+  font-family: 'Inconsolata', monospace; font-size: 11px;
+  font-weight: 600; letter-spacing: 0.1em; padding: 3px 10px;
+  border-radius: 4px; white-space: nowrap;
+}
+.history-label.pos { color: var(--emerald); background: rgba(0,214,143,0.1); }
+.history-label.neg { color: var(--rose);    background: rgba(255,77,109,0.1); }
+.history-label.neu { color: var(--violet);  background: rgba(124,92,252,0.1); }
+.history-conf {
+  font-family: 'Inconsolata', monospace; font-size: 11px;
+  color: var(--dim);
+}
+
+/* ── STATS BANNER ──────────────────────────────────────────── */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1px; background: var(--rim); border: 1px solid var(--rim);
+  border-radius: 12px; overflow: hidden; margin-top: 32px;
+}
+.stat-cell {
+  background: var(--card); padding: 18px 20px; text-align: center;
+}
+.stat-val {
+  font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800;
+  color: var(--snow); display: block;
+}
+.stat-label {
+  font-family: 'Inconsolata', monospace; font-size: 10px;
+  color: var(--dim); letter-spacing: 0.12em; text-transform: uppercase;
+  margin-top: 3px; display: block;
+}
+
+/* ── API KEY MODAL ─────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(10,14,26,0.85);
+  backdrop-filter: blur(6px); z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+.modal {
+  background: var(--card); border: 1px solid var(--mist);
+  border-radius: 16px; padding: 32px; width: 100%; max-width: 440px;
+  position: relative;
+}
+.modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; color: var(--snow); }
+.modal p  { font-size: 13px; color: var(--mid); margin-bottom: 20px; line-height: 1.6; }
+.modal input {
+  width: 100%; background: var(--deep); border: 1px solid var(--rim);
+  border-radius: 8px; padding: 12px 16px;
+  font-family: 'DM Mono', monospace; font-size: 13px; color: var(--snow);
+  outline: none; margin-bottom: 16px; transition: border-color 0.2s;
+}
+.modal input:focus { border-color: var(--violet); }
+.modal-row { display: flex; gap: 10px; }
+.btn-modal-save {
+  flex: 1; padding: 11px; border-radius: 8px;
+  background: var(--violet); color: white;
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  border: none; cursor: pointer; transition: background 0.2s;
+}
+.btn-modal-save:hover { background: #6a4de8; }
+.btn-modal-close {
+  padding: 11px 18px; border-radius: 8px;
+  background: transparent; border: 1px solid var(--rim);
+  color: var(--mid); font-family: 'Syne', sans-serif; font-size: 13px;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-modal-close:hover { border-color: var(--rose); color: var(--rose); }
+
+/* ── API CONFIG BAR ────────────────────────────────────────── */
+.config-bar {
+  background: var(--deep); border: 1px solid var(--rim);
+  border-radius: 10px; padding: 12px 18px;
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.config-label {
+  font-family: 'Inconsolata', monospace; font-size: 11px;
+  color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase;
+  white-space: nowrap;
+}
+.config-input {
+  flex: 1; min-width: 200px; background: var(--card);
+  border: 1px solid var(--rim); border-radius: 6px;
+  padding: 7px 12px; font-family: 'DM Mono', monospace; font-size: 12px;
+  color: var(--frost); outline: none; transition: border-color 0.2s;
+}
+.config-input:focus { border-color: var(--violet); }
+.btn-test-api {
+  padding: 7px 16px; border-radius: 6px;
+  font-family: 'Inconsolata', monospace; font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; cursor: pointer;
+  background: transparent; border: 1px solid var(--mist); color: var(--mid);
+  transition: all 0.2s; white-space: nowrap;
+}
+.btn-test-api:hover { border-color: var(--teal); color: var(--teal); }
+
+/* ── TOAST ─────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 32px; right: 32px; z-index: 200;
+  background: var(--card); border: 1px solid var(--rim);
+  border-radius: 10px; padding: 14px 20px;
+  font-family: 'Inconsolata', monospace; font-size: 13px;
+  color: var(--frost); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 340px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-left: 3px solid var(--emerald); }
+.toast.error   { border-left: 3px solid var(--rose); }
+.toast.info    { border-left: 3px solid var(--violet); }
+
+/* ── ERROR STATE ───────────────────────────────────────────── */
+.error-card {
+  background: rgba(255,77,109,0.07); border: 1px solid rgba(255,77,109,0.25);
+  border-radius: 12px; padding: 20px 24px;
+  font-family: 'Inconsolata', monospace; font-size: 13px;
+  color: var(--rose); line-height: 1.6; display: none;
+  margin-top: 16px;
+}
+
+/* ── RESPONSIVE ────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .verdict-row { flex-direction: column; align-items: flex-start; }
+  .hero-title { font-size: 38px; }
+  .btn-row { flex-direction: column; }
+  .btn-analyze { max-width: 100%; }
+  .history-item { grid-template-columns: 1fr auto; }
+  .history-conf { display: none; }
+}
+
+/* ── BATCH MODE ─────────────────────────────────────────────── */
+.batch-mode-panel {
+  display: none; margin-top: 16px;
+}
+.batch-mode-panel.show { display: block; }
+.batch-results-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.batch-row {
+  display: grid; grid-template-columns: 1fr 120px 80px;
+  align-items: center; gap: 12px; padding: 12px 16px;
+  background: var(--deep); border: 1px solid var(--rim); border-radius: 8px;
+}
+.batch-text {
+  font-family: 'DM Mono', monospace; font-size: 12px; color: var(--mid);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient background -->
+<div class="bg-layer">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div class="grid-overlay"></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<div class="page">
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">NEX<span>US</span></div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="nav-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">CONNECTING...</span>
+      </div>
+      <button class="btn-test-api" onclick="showApiConfig()">⚙ CONFIG</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="hero-eyebrow">DistilBERT · ONNX Runtime · FastAPI</span>
+    <h1 class="hero-title">Sentiment<br>Intelligence</h1>
+    <p class="hero-sub">3-class deep learning sentiment analysis. Production-grade. Sub-50ms inference.</p>
+    <div class="hero-chips">
+      <span class="chip chip-t">POSITIVE</span>
+      <span class="chip chip-v">NEUTRAL</span>
+      <span class="chip chip-e">NEGATIVE</span>
+    </div>
+  </div>
+
+  <!-- API CONFIG BAR -->
+  <div class="config-bar" id="apiConfigBar">
+    <span class="config-label">API</span>
+    <input class="config-input" id="apiUrl" type="text" value="http://localhost:8000" placeholder="API URL">
+    <input class="config-input" id="apiKey" type="password" value="dev-key-123" placeholder="API Key">
+    <button class="btn-test-api" onclick="testConnection()">PING</button>
+  </div>
+
+  <!-- INPUT CARD -->
+  <div class="input-card" id="inputCard">
+    <label class="input-label">Input Text</label>
+    <textarea id="textInput" placeholder="Enter any text to analyze sentiment…" oninput="updateCounter()" onfocus="inputCard.classList.add('focused')" onblur="inputCard.classList.remove('focused')"></textarea>
+
+    <div class="input-footer">
+      <span class="char-counter" id="charCounter">0 / 5000</span>
+      <div class="btn-row">
+        <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
+          <div class="spinner" id="spinner"></div>
+          <span id="btnText">Analyze</span>
+        </button>
+        <button class="btn-batch" onclick="toggleBatchMode()">Batch</button>
+        <button class="btn-clear" onclick="clearAll()">✕</button>
+      </div>
+    </div>
+
+    <div class="examples">
+      <span class="example-chip" onclick="setExample(this)">This product exceeded all expectations!</span>
+      <span class="example-chip" onclick="setExample(this)">Disappointing quality, would not recommend.</span>
+      <span class="example-chip" onclick="setExample(this)">It arrived on time, nothing special.</span>
+      <span class="example-chip" onclick="setExample(this)">Absolutely terrible experience from start to finish.</span>
+      <span class="example-chip" onclick="setExample(this)">Average service, meets expectations barely.</span>
+    </div>
+
+    <!-- Batch Panel -->
+    <div class="batch-mode-panel" id="batchPanel">
+      <label class="input-label" style="margin-top:16px">Batch Mode — one text per line (max 64)</label>
+      <textarea id="batchInput" placeholder="Text one&#10;Text two&#10;Text three…" style="min-height:120px"></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn-analyze" onclick="analyzeBatch()" style="max-width:200px">
+          <span>Analyze Batch</span>
+        </button>
+      </div>
+      <div class="batch-results-list" id="batchResults"></div>
+    </div>
+  </div>
+
+  <!-- ERROR CARD -->
+  <div class="error-card" id="errorCard"></div>
+
+  <!-- RESULT SECTION -->
+  <div id="result-section">
+    <div class="result-card" id="resultCard">
+      <div class="verdict-row">
+        <div class="verdict-icon" id="verdictIcon">?</div>
+        <div>
+          <div class="verdict-label" id="verdictLabel">—</div>
+          <div class="verdict-conf" id="verdictConf">confidence: —</div>
+        </div>
+      </div>
+
+      <div class="scores-title">Score Distribution</div>
+      <div class="score-row">
+        <div class="score-header"><span class="score-name">POSITIVE</span><span class="score-pct" id="posScore">0%</span></div>
+        <div class="bar-track"><div class="bar-fill pos" id="posBar"></div></div>
+      </div>
+      <div class="score-row">
+        <div class="score-header"><span class="score-name">NEUTRAL</span><span class="score-pct" id="neuScore">0%</span></div>
+        <div class="bar-track"><div class="bar-fill neu" id="neuBar"></div></div>
+      </div>
+      <div class="score-row">
+        <div class="score-header"><span class="score-name">NEGATIVE</span><span class="score-pct" id="negScore">0%</span></div>
+        <div class="bar-track"><div class="bar-fill neg" id="negBar"></div></div>
+      </div>
+
+      <div class="meta-strip" id="metaStrip"></div>
+    </div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-cell">
+      <span class="stat-val" id="statTotal">0</span>
+      <span class="stat-label">Analyzed</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-val" id="statPos">0</span>
+      <span class="stat-label">Positive</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-val" id="statNeu">0</span>
+      <span class="stat-label">Neutral</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-val" id="statNeg">0</span>
+      <span class="stat-label">Negative</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-val" id="statAvgMs">—</span>
+      <span class="stat-label">Avg Latency</span>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="history-section" id="historySection">
+    <div class="section-header">
+      <span class="section-title">Recent Analyses</span>
+      <div class="section-line"></div>
+      <button class="clear-history-btn" onclick="clearHistory()">Clear all</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────
+const state = {
+  history: [],
+  stats: { total: 0, pos: 0, neu: 0, neg: 0, totalMs: 0 },
+  batchMode: false,
+};
+
+let API_URL = 'http://localhost:8000';
+let API_KEY = 'dev-key-123';
+
+// ── INIT ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('apiUrl').value = API_URL;
+  document.getElementById('apiKey').value = API_KEY;
+  testConnection();
+  document.getElementById('apiUrl').addEventListener('change', e => { API_URL = e.target.value.trim(); });
+  document.getElementById('apiKey').addEventListener('change', e => { API_KEY = e.target.value.trim(); });
+});
+
+// ── CONNECTION TEST ───────────────────────────────────────────
+async function testConnection() {
+  const dot  = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  dot.className = 'status-dot'; text.textContent = 'CONNECTING...';
+  try {
+    const r = await fetch(`${API_URL}/api/v1/health`, { signal: AbortSignal.timeout(4000) });
+    if (r.ok) {
+      const d = await r.json();
+      dot.className = 'status-dot';
+      text.textContent = d.model_loaded ? `ONLINE · ${d.model_version}` : 'ONLINE (model loading)';
+      showToast(`API online — ${d.model_version}`, 'success');
+    } else {
+      throw new Error(`HTTP ${r.status}`);
+    }
+  } catch (e) {
+    dot.className = 'status-dot offline';
+    text.textContent = 'OFFLINE';
+    showToast(`Cannot reach API: ${e.message}`, 'error');
+  }
+}
+
+// ── CHARACTER COUNTER ─────────────────────────────────────────
+function updateCounter() {
+  const len  = document.getElementById('textInput').value.length;
+  const el   = document.getElementById('charCounter');
+  el.textContent = `${len.toLocaleString()} / 5,000`;
+  el.className = 'char-counter' + (len > 4500 ? ' warn' : '') + (len > 5000 ? ' over' : '');
+}
+
+// ── EXAMPLE CHIPS ─────────────────────────────────────────────
+function setExample(el) {
+  document.getElementById('textInput').value = el.textContent;
+  updateCounter();
+  document.getElementById('textInput').focus();
+}
+
+// ── CLEAR ─────────────────────────────────────────────────────
+function clearAll() {
+  document.getElementById('textInput').value = '';
+  updateCounter();
+  document.getElementById('result-section').classList.remove('show');
+  document.getElementById('errorCard').style.display = 'none';
+}
+
+// ── ANALYZE ───────────────────────────────────────────────────
+async function analyze() {
+  const text = document.getElementById('textInput').value.trim();
+  if (!text) { showToast('Please enter some text', 'info'); return; }
+  if (text.length > 5000) { showToast('Text exceeds 5,000 characters', 'error'); return; }
+
+  setLoading(true);
+  hideError();
+
+  try {
+    const r = await fetch(`${API_URL}/api/v1/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`,
+      },
+      body: JSON.stringify({ text }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP ${r.status}`);
+    }
+
+    const data = await r.json();
+    renderResult(data, text);
+
+  } catch (e) {
+    showError(`Analysis failed: ${e.message}`);
+    showToast(e.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── RENDER RESULT ─────────────────────────────────────────────
+function renderResult(data, text) {
+  const label = data.label;
+  const cls   = label === 'POSITIVE' ? 'pos' : label === 'NEGATIVE' ? 'neg' : 'neu';
+  const emoji = label === 'POSITIVE' ? '😊' : label === 'NEGATIVE' ? '😞' : '😐';
+  const conf  = (data.confidence * 100).toFixed(1);
+
+  // Card border
+  const card = document.getElementById('resultCard');
+  card.className = `result-card ${cls}`;
+
+  // Verdict
+  document.getElementById('verdictIcon').className   = `verdict-icon ${cls}`;
+  document.getElementById('verdictIcon').textContent = emoji;
+  document.getElementById('verdictLabel').className  = `verdict-label ${cls}`;
+  document.getElementById('verdictLabel').textContent = label;
+  document.getElementById('verdictConf').textContent  = `${conf}% confidence`;
+
+  // Bars
+  const sc = data.scores;
+  setBar('pos', sc.POSITIVE);
+  setBar('neu', sc.NEUTRAL);
+  setBar('neg', sc.NEGATIVE);
+
+  // Meta
+  const meta = data.metadata || {};
+  document.getElementById('metaStrip').innerHTML = `
+    <span class="meta-item">⚡ <strong>${meta.processing_ms}ms</strong></span>
+    <span class="meta-item">🔤 <strong>${meta.token_count}</strong> tokens</span>
+    <span class="meta-item">🗄 <strong>${meta.cached ? 'Cached' : 'Fresh'}</strong></span>
+    <span class="meta-item">🤖 <strong>${meta.model_version || 'v2.1.0'}</strong></span>
+  `;
+
+  // Show
+  document.getElementById('result-section').classList.add('show');
+
+  // Update stats & history
+  updateStats(label, meta.processing_ms || 0);
+  addHistory(text, label, data.confidence);
+}
+
+function setBar(id, value) {
+  const pct = (value * 100).toFixed(1);
+  document.getElementById(`${id}Score`).textContent = `${pct}%`;
+  setTimeout(() => {
+    document.getElementById(`${id}Bar`).style.width = `${pct}%`;
+  }, 50);
+}
+
+// ── BATCH ANALYZE ─────────────────────────────────────────────
+function toggleBatchMode() {
+  state.batchMode = !state.batchMode;
+  document.getElementById('batchPanel').classList.toggle('show', state.batchMode);
+}
+
+async function analyzeBatch() {
+  const raw   = document.getElementById('batchInput').value;
+  const texts = raw.split('\n').map(t => t.trim()).filter(Boolean).slice(0, 64);
+  if (!texts.length) { showToast('Enter at least one text', 'info'); return; }
+
+  showToast(`Analyzing ${texts.length} texts…`, 'info');
+
+  try {
+    const r = await fetch(`${API_URL}/api/v1/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+      body: JSON.stringify({ texts }),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    renderBatchResults(texts, data.results);
+    showToast(`Done — ${data.count} results in ${data.processing_ms}ms`, 'success');
+  } catch (e) {
+    showToast(`Batch failed: ${e.message}`, 'error');
+  }
+}
+
+function renderBatchResults(texts, results) {
+  const container = document.getElementById('batchResults');
+  container.innerHTML = results.map((r, i) => {
+    const cls   = r.label === 'POSITIVE' ? 'pos' : r.label === 'NEGATIVE' ? 'neg' : 'neu';
+    const conf  = (r.confidence * 100).toFixed(1);
+    return `
+      <div class="batch-row">
+        <span class="batch-text" title="${texts[i]}">${texts[i]}</span>
+        <span class="history-label ${cls}">${r.label}</span>
+        <span class="history-conf">${conf}%</span>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── STATS ─────────────────────────────────────────────────────
+function updateStats(label, ms) {
+  state.stats.total++;
+  state.stats.totalMs += ms;
+  if (label === 'POSITIVE') state.stats.pos++;
+  else if (label === 'NEGATIVE') state.stats.neg++;
+  else state.stats.neu++;
+
+  document.getElementById('statTotal').textContent = state.stats.total;
+  document.getElementById('statPos').textContent   = state.stats.pos;
+  document.getElementById('statNeu').textContent   = state.stats.neu;
+  document.getElementById('statNeg').textContent   = state.stats.neg;
+  document.getElementById('statAvgMs').textContent =
+    `${Math.round(state.stats.totalMs / state.stats.total)}ms`;
+}
+
+// ── HISTORY ───────────────────────────────────────────────────
+function addHistory(text, label, confidence) {
+  state.history.unshift({ text, label, confidence });
+  if (state.history.length > 20) state.history.pop();
+  renderHistory();
+  document.getElementById('historySection').classList.add('show');
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  list.innerHTML = state.history.slice(0, 10).map(item => {
+    const cls  = item.label === 'POSITIVE' ? 'pos' : item.label === 'NEGATIVE' ? 'neg' : 'neu';
+    const conf = (item.confidence * 100).toFixed(1);
+    const short = item.text.length > 80 ? item.text.slice(0, 80) + '…' : item.text;
+    return `
+      <div class="history-item" onclick="reuseHistory('${item.text.replace(/'/g, "\\'")}')">
+        <span class="history-text">${short}</span>
+        <span class="history-label ${cls}">${item.label}</span>
+        <span class="history-conf">${conf}%</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function reuseHistory(text) {
+  document.getElementById('textInput').value = text;
+  updateCounter();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearHistory() {
+  state.history = [];
+  document.getElementById('historyList').innerHTML = '';
+  document.getElementById('historySection').classList.remove('show');
+}
+
+// ── LOADING ───────────────────────────────────────────────────
+function setLoading(on) {
+  document.getElementById('analyzeBtn').disabled = on;
+  document.getElementById('spinner').style.display = on ? 'block' : 'none';
+  document.getElementById('btnText').textContent = on ? 'Analyzing…' : 'Analyze';
+}
+
+// ── ERROR ─────────────────────────────────────────────────────
+function showError(msg) {
+  const el = document.getElementById('errorCard');
+  el.textContent = `⚠ ${msg}`;
+  el.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('errorCard').style.display = 'none';
+}
+
+// ── CONFIG ────────────────────────────────────────────────────
+function showApiConfig() {
+  document.getElementById('apiConfigBar').scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('apiUrl').focus();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.classList.remove('show'); }, 3500);
+}
+
+// ── KEYBOARD ─────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze();
+});
+</script>
+</body>
+</html>

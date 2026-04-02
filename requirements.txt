@@ -1,0 +1,103 @@
+# ══════════════════════════════════════════════════════════════════
+# Sentiment Analysis API — Requirements
+# OS: Ubuntu 22.04 / 24.04 LTS
+# CUDA: 12.8  |  Python: 3.11+
+# Install: pip install -r requirements.txt
+# ══════════════════════════════════════════════════════════════════
+
+# ── System Prerequisites (run before pip install) ──────────────────
+# sudo apt-get update && sudo apt-get install -y \
+#   python3.11 python3.11-dev python3-pip build-essential \
+#   libssl-dev libffi-dev libxml2-dev libxslt1-dev \
+#   libjpeg-dev zlib1g-dev libpng-dev \
+#   git curl wget unzip gcc g++ make \
+#   redis-server redis-tools \
+#   libgomp1 libopenblas-dev liblapack-dev
+
+# ── PyTorch with CUDA 12.8 ─────────────────────────────────────────
+# Install separately first:
+# pip install torch==2.5.1+cu128 torchvision==0.20.1+cu128 torchaudio==2.5.1+cu128 \
+#   --extra-index-url https://download.pytorch.org/whl/cu128
+
+torch==2.5.1+cu128
+torchvision==0.20.1+cu128
+torchaudio==2.5.1+cu128
+
+# ── Transformers & HuggingFace Ecosystem ──────────────────────────
+transformers==4.47.1
+datasets==3.2.0
+tokenizers==0.21.0
+accelerate==1.2.1
+evaluate==0.4.3
+huggingface-hub==0.27.0
+
+# ── ML / Science Stack ────────────────────────────────────────────
+scikit-learn==1.6.0
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.14.1
+
+# ── NLP Preprocessing ─────────────────────────────────────────────
+nltk==3.9.1
+spacy==3.8.3
+langdetect==1.0.9
+emoji==2.14.0
+beautifulsoup4==4.12.3
+lxml==5.3.0
+regex==2024.11.6
+
+# ── ONNX Export & Optimized Runtime ──────────────────────────────
+onnx==1.17.0
+onnxruntime-gpu==1.20.1
+onnxsim==0.4.36
+optimum==1.24.0
+
+# ── FastAPI Server Stack ──────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+gunicorn==23.0.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+python-multipart==0.0.20
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+httpx==0.28.1
+aiofiles==24.1.0
+
+# ── Redis Cache ───────────────────────────────────────────────────
+redis==5.2.1
+hiredis==3.1.0
+
+# ── Monitoring & Logging ──────────────────────────────────────────
+prometheus-fastapi-instrumentator==7.0.0
+prometheus-client==0.21.1
+loguru==0.7.3
+structlog==25.1.0
+
+# ── Testing ───────────────────────────────────────────────────────
+pytest==8.3.4
+pytest-asyncio==0.25.2
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+httpx==0.28.1
+factory-boy==3.3.1
+faker==33.1.0
+locust==2.32.6
+
+# ── Notebooks & Visualization ────────────────────────────────────
+jupyter==1.1.1
+jupyterlab==4.3.4
+ipywidgets==8.1.5
+matplotlib==3.10.0
+seaborn==0.13.2
+plotly==5.24.1
+tqdm==4.67.1
+ipykernel==6.29.5
+
+# ── Utilities ─────────────────────────────────────────────────────
+python-dotenv==1.0.1
+click==8.1.8
+rich==13.9.4
+typer==0.15.1
+pyyaml==6.0.2
+toml==0.10.2
